@@ -1,0 +1,16 @@
+{
+  "name": "actions-setup-docker",
+  "version": "1.0.12",
+  "description": "Set up your GitHub Actions workflow with a specific version of Docker",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build index.js -o dist/"
+  },
+  "dependencies": {
+    "@actions/core": "^2.0.0",
+    "@actions/exec": "^2.0.0",
+    "axios": "^1.19.0"
+  },
+  "author": "step-security",
+  "license": "MIT"
+}

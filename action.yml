@@ -1,0 +1,66 @@
+# https://help.github.com/en/articles/metadata-syntax-for-github-actions
+
+name: 'setup-docker'
+description: 'Set up your GitHub Actions workflow with a specific version of Docker'
+author: 'step-security'
+
+inputs:
+  docker_version:
+    description: >-
+      The Docker Engine version to install (e.g. 20.10, 23.0, 24.0).
+      Defaults to the latest stable release if the specified version is unavailable.
+    required: false
+    default: "24.0"
+
+  docker_channel:
+    description: >-
+      The release channel to use when fetching Docker packages.
+      Accepted values: stable, test.
+      See https://download.docker.com/linux/ubuntu/dists/focal/pool/ for available packages.
+    required: false
+    default: stable
+    # test
+    # nightly # this channel use https://github.com/AkihiroSuda/moby-snapshot
+
+  docker_cli_experimental:
+    description: >-
+      Whether to enable experimental features in the Docker CLI.
+      Set to 'enabled' to activate experimental commands.
+      See https://docs.docker.com/engine/reference/commandline/cli/#experimental-features
+    required: false
+    default: enabled
+
+  docker_daemon_json:
+    description: >-
+      JSON content written to the Docker daemon configuration file
+      (/etc/docker/daemon.json on Linux, /Users/runner/.docker/daemon.json on macOS).
+      See https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-configuration-file
+    required: false
+    default: |
+      {
+        "experimental": true
+      }
+
+  docker_buildx:
+    description: >-
+      Set to 'true' to install and configure Docker Buildx for multi-platform builds.
+      When enabled, also sets up QEMU and creates a dedicated builder instance.
+      See https://docs.docker.com/engine/reference/commandline/buildx/
+    required: false
+    default: "true"
+
+  docker_nightly_version:
+    description: >-
+      The snapshot tag to use when installing a Docker nightly build.
+      Only applies when docker_channel is set to 'nightly'.
+      See https://github.com/AkihiroSuda/moby-snapshot/releases for available snapshots.
+    required: false
+    default: snapshot-20210202
+
+runs:
+  using: 'node24'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'box'
+  color: 'green'

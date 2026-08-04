@@ -1,0 +1,43 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+name: test
+
+jobs:
+  install-and-verify:
+    name: Install and Verify Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Docker
+        uses: ./
+        with:
+          docker_version: "24.0"
+          docker_channel: stable
+      - name: Check Docker installation
+        run: |
+          docker version
+          docker info
+          docker run --rm hello-world
+
+  buildx-support:
+    name: Buildx Multi-platform
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Docker with Buildx
+        uses: ./
+        with:
+          docker_version: "24.0"
+          docker_buildx: "true"
+      - name: Verify Buildx
+        run: |
+          docker buildx version
+          docker buildx ls
+
