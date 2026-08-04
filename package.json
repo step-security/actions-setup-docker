@@ -12,5 +12,8 @@
     "axios": "^1.19.0"
   },
   "author": "step-security",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@vercel/ncc": "^0.44.1"
+  }
 }
