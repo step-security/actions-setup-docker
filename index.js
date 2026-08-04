@@ -170,11 +170,6 @@ system_profiler SPHardwareDataType || true
 }
 
 async function setupMacOS() {
-  if (os.arch() !== 'x64') {
-    core.warning('only support macOS x86_64, os arch is ' + os.arch());
-    return;
-  }
-
   core.exportVariable('DOCKER_CONFIG', '/Users/runner/.docker');
 
   await exec.exec('docker', ['--version']).catch(() => {});
