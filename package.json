@@ -4,9 +4,7 @@
   "description": "Set up your GitHub Actions workflow with a specific version of Docker",
   "main": "dist/index.js",
   "scripts": {
-    "build": "ncc build index.js -o dist/",
-    "test": "cross-env INPUT_DOCKER_VERSION='20.10' INPUT_DOCKER_CHANNEL=stable node index",
-    "test:noversion": "cross-env INPUT_DOCKER_VERSION='20.10' INPUT_DOCKER_CHANNEL=stable node index"
+    "build": "ncc build index.js -o dist/"
   },
   "dependencies": {
     "@actions/core": "^2.0.0",
