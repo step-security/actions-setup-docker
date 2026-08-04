@@ -183,7 +183,7 @@ async function setupMacOS() {
   await installDockerMacOS();
 
   await exec.exec('mkdir', ['-p', '/Users/runner/.docker']);
-  await runShell(`echo '${daemonConfig}' | sudo tee /Users/runner/.docker/daemon.json`);
+  fs.writeFileSync('/Users/runner/.docker/daemon.json', daemonConfig);
 
   core.startGroup('show daemon json content');
   await exec.exec('cat', ['/Users/runner/.docker/daemon.json']);
@@ -214,11 +214,10 @@ async function addDockerAptSource(ubuntuCodename) {
   const groupName = 'add apt source';
   core.debug(groupName);
   core.startGroup(groupName);
-  await runShell(`
-    echo \
-      "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-      ${ubuntuCodename} ${dockerChannel}" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  `);
+  const sourceEntry = `deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu ${ubuntuCodename} ${dockerChannel}\n`;
+  const tmpPath = '/tmp/docker.list';
+  fs.writeFileSync(tmpPath, sourceEntry);
+  await exec.exec('sudo', ['cp', tmpPath, '/etc/apt/sources.list.d/docker.list']);
   core.endGroup();
 }
 
@@ -241,18 +240,22 @@ async function showAvailableDockerVersions() {
 }
 
 async function resolveDockerVersionString() {
-  const versionString = await runShell(
-    `apt-cache madison docker-ce | grep ${dockerVersion} | head -n 1 | awk '{print $3}' | sed s/[[:space:]]//g`
-  );
+  let madisonOutput = '';
+  await exec.exec('apt-cache', ['madison', 'docker-ce'], {
+    listeners: { stdout: (data) => { madisonOutput += data.toString(); } },
+    silent: true
+  });
 
-  if (!versionString) {
-    const osRelease = await runShell(
-      `cat /etc/os-release | grep VERSION_ID | cut -d '=' -f 2`
-    );
-    core.warning(`Docker ${dockerVersion} not available on ubuntu ${osRelease}, will install latest docker version`);
+  const match = madisonOutput.split('\n').find(line => line.includes(dockerVersion));
+  if (!match) {
+    const osRelease = fs.readFileSync('/etc/os-release', 'utf8');
+    const versionIdLine = osRelease.split('\n').find(l => l.startsWith('VERSION_ID'));
+    const osVersion = versionIdLine ? versionIdLine.split('=')[1].replace(/"/g, '') : 'unknown';
+    core.warning(`Docker ${dockerVersion} not available on ubuntu ${osVersion}, will install latest docker version`);
+    return '';
   }
 
-  return versionString;
+  return match.split('|')[1]?.trim() || '';
 }
 
 async function removeDefaultMoby() {
@@ -287,7 +290,9 @@ async function configureDaemonJson() {
   core.startGroup('show default daemon json content_');
   core.endGroup();
 
-  await runShell(`echo '${daemonConfig}' | sudo tee /etc/docker/daemon.json`);
+  await exec.exec('sudo', ['tee', '/etc/docker/daemon.json'], {
+    input: Buffer.from(daemonConfig)
+  });
 
   core.startGroup('show daemon json content');
   await exec.exec('sudo', ['cat', '/etc/docker/daemon.json']);
